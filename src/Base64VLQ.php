@@ -64,17 +64,25 @@ class Base64VLQ {
   /**
    * Return the value decoded from base 64 VLQ.
    */
-  public static function decode($encoded) {
-    $vlq = 0;
-
-    $i = 0;
-    do {
-      $digit = self::base64Decode($encoded[$i]);
-      $vlq |= ($digit & self::$MASK) << ($i*self::$SHIFT);
-      $i++;
-    } while ($digit & self::$CONTINUATION_BIT);
-
-    return self::fromVLQSigned($vlq);
+  public static function decode($encoded,$decodeMany=false) {
+    $output = array();
+    $h = 0;
+    while ($h<strlen($encoded)) {
+      $vlq = 0;
+      $i = 0;
+      do {
+        $digit = self::base64Decode($encoded[$i+$h]);
+        $vlq |= ($digit & self::$MASK) << ($i*self::$SHIFT);
+        $i++;
+      } while ($digit & self::$CONTINUATION_BIT);
+      $int = self::fromVLQSigned($vlq);
+      if (!$decodeMany) {
+        return $int;
+      }
+      $output[] = $int;
+      $h += $i;
+    }
+    return $output;
   }
 
   /**
